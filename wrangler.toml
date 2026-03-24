@@ -1,0 +1,44 @@
+name = "cf-reverse-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# ---------------------------------------------------------------------------
+# ROUTES — JSON array, matched top to bottom, first match wins.
+#
+# Each route needs a "prefix" and either a "binding" or an "upstream":
+#
+#   binding  — name of a Cloudflare Worker service binding (see [[services]]
+#               below). Zero-egress, worker-to-worker. The full request path
+#               is forwarded as-is (the target worker handles its own routing).
+#
+#   upstream — any HTTP/HTTPS origin URL. Use strip_prefix: true if the
+#               upstream doesn't know about the prefix (see example below).
+#
+# DEFAULT — optional fallback for requests that match no prefix.
+#            Same shape as a route, without the "prefix" field.
+#            If omitted, unmatched requests return 404.
+# ---------------------------------------------------------------------------
+
+[vars]
+ROUTES = '''
+[
+  { "prefix": "/app",    "binding":  "APP_WORKER"                                    },
+  { "prefix": "/api",    "upstream": "https://api.example.com", "strip_prefix": true },
+  { "prefix": "/blog",   "upstream": "https://my-blog.up.railway.app"                }
+]
+'''
+DEFAULT = '{ "binding": "MAIN_WORKER" }'
+
+# ---------------------------------------------------------------------------
+# Service bindings — one [[services]] block per worker you route to.
+# The "binding" name here must match the "binding" value in ROUTES / DEFAULT.
+# ---------------------------------------------------------------------------
+
+[[services]]
+binding = "APP_WORKER"
+service  = "my-app-worker-name"   # the Worker's name in your Cloudflare account
+
+[[services]]
+binding = "MAIN_WORKER"
+service  = "my-main-worker-name"

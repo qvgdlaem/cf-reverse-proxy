@@ -48,7 +48,13 @@ ROUTES = '''
 
 # Optional: catch-all for requests that match no prefix.
 # If omitted, unmatched requests return 404.
-DEFAULT = '{ "binding": "MAIN_WORKER" }'
+# Can be a Worker binding OR any upstream — including a bare IP address.
+# Common pattern: your main site is on a VPS; a Worker handles one namespace;
+# everything else falls through to the VPS.
+DEFAULT = '{ "upstream": "https://1.2.3.4" }'
+
+# Or a Worker binding:
+# DEFAULT = '{ "binding": "MAIN_WORKER" }'
 ```
 
 For every `binding` you reference, add a `[[services]]` block:
